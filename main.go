@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	//"time"
+	"sync"
 	"time"
 )
 
@@ -86,8 +88,26 @@ func (b Board) Print() {
 	}
 }
 
+func calc(b *Board, start, to int) {
+	for r := start; r < to; r++ {
+		for c := 0; c < b.cols; c++ {
+			var aliveNeighbours = b.AliveNeighbours(r, c)
+			if b.Get(r, c) == ALIVE {
+				if aliveNeighbours < 2 || aliveNeighbours > 3 {
+					b.Set(r, c, DEAD)
+				} else {
+					b.Set(r, c, ALIVE)
+				}
+			} else if aliveNeighbours == 3 {
+				b.Set(r, c, ALIVE);
+			}
+		}
+	}
+}
+
 func main() {
-	const size = 10;
+	const size = 10000;
+	const threads = 4;
 	var b = NewBoard(size)
 
 
@@ -101,26 +121,31 @@ func main() {
 	b.Init(2, 2, ALIVE)
 	b.Init(2, 3, ALIVE)
 
-	//b.AliveNeighbours(6, 4)
-
 	for {
-		fmt.Print("\033[H\033[2J")
-		for r := 0; r < size; r++ {
-			for c := 0; c < size; c++ {
-				var aliveNeighbours = b.AliveNeighbours(r, c)
-				if b.Get(r, c) == ALIVE {
-					if aliveNeighbours < 2 || aliveNeighbours > 3 {
-						b.Set(r, c, DEAD)
-					} else {
-						b.Set(r, c, ALIVE)
-					}
-				} else if aliveNeighbours == 3 {
-					b.Set(r, c, ALIVE);
+		start := time.Now()
+
+		var wait sync.WaitGroup
+
+		wait.Add(threads)
+		for t := 0; t < threads; t++ {
+			go func(t int) {
+				defer wait.Done()
+
+				var from = (size + threads) / threads * t;
+				var to = from + (size + threads) / threads
+				if to > size {
+					to = size
 				}
-			}
+
+				calc(b, from, to)
+			}(t)
 		}
+
+		wait.Wait()
+
 		b.generation++
-		b.Print()
-		time.Sleep(500 * time.Millisecond)
+
+		elapsed := time.Since(start)
+		fmt.Println(elapsed)
 	}
 }
