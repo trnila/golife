@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	//"time"
 	"sync"
 	"time"
 )
@@ -10,10 +9,12 @@ import (
 const DEAD = 0;
 const ALIVE = 1;
 
+type Cell int
+
 type Board struct {
 	rows int
 	cols int
-	data [][]int
+	data [][]Cell
 	generation int
 }
 
@@ -23,11 +24,11 @@ func NewBoard(size int) *Board {
 	var board = Board{
 		rows: size,
 		cols: size,
-		data: make([][]int, generations),
+		data: make([][]Cell, generations),
 	}
 
 	for i := 0; i < generations; i++ {
-		board.data[i] = make([]int, size * size);
+		board.data[i] = make([]Cell, size * size);
 	}
 
 	return &board
@@ -42,7 +43,7 @@ func (b Board) getIndex(row, col int) int {
 	return row * b.cols + col
 }
 
-func (b Board) Get(row, col int) int {
+func (b Board) Get(row, col int) Cell {
 	if !b.isValid(row, col) {
 		return DEAD
 	}
@@ -50,13 +51,13 @@ func (b Board) Get(row, col int) int {
 	return b.data[b.generation % 2][b.getIndex(row, col)];
 }
 
-func (b Board) Set(row, col, val int) {
+func (b Board) Set(row, col int, val Cell) {
 	//if b.isValid(row, col) {
 		b.data[(b.generation + 1) % 2][b.getIndex(row, col)] = val
 	//}
 }
 
-func (b Board) Init(row, col, val int) {
+func (b Board) Init(row, col int, val Cell) {
 	b.data[0][b.getIndex(row, col)] = val
 	b.data[1][b.getIndex(row, col)] = val
 }
@@ -72,7 +73,7 @@ func (b Board) AliveNeighbours(row, col int) int {
 		}
 	}
 
-	return count - b.Get(row, col)
+	return count - int(b.Get(row, col))
 }
 
 func (b Board) Print() {
@@ -125,8 +126,8 @@ func main() {
 		start := time.Now()
 
 		var wait sync.WaitGroup
-
 		wait.Add(threads)
+
 		for t := 0; t < threads; t++ {
 			go func(t int) {
 				defer wait.Done()
