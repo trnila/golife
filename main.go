@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 	"os"
+	"fmt"
 )
 
 func createBoard() *Board {
@@ -36,15 +37,30 @@ func createBoard() *Board {
 	return b
 }
 
+func CreateRenderer(b *Board, quit chan struct{}) Renderer {
+	var renderer Renderer
+
+	renderer, err := NewTuiRenderer(b, quit);
+	if err == nil {
+		return renderer
+	}
+	fmt.Print(err)
+
+	// fallback to ascii renderer
+	renderer, err = NewAsciiRenderer(b, quit); if err != nil {
+		panic(err)
+	}
+
+	return renderer
+}
+
 func main() {
 	const threads = 4;
 
 	b := createBoard()
 	quit := make(chan struct{})
 
-	renderer, err := NewTuiRenderer(b, quit); if err != nil {
-		panic(err)
-	}
+	renderer := CreateRenderer(b, quit)
 	defer renderer.Close()
 
 	go compute(threads, b, renderer)

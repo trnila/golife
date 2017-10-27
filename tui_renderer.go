@@ -26,13 +26,7 @@ func NewTuiRenderer(b* Board, quit chan struct{}) (*TuiRenderer, error) {
 	}
 
 	cols, rows := s.Size()
-	var view = Viewport{
-		rows: rows,
-		cols: cols,
-		centerRow: rows / 2,
-		centerCol: cols / 2,
-		zoom: 1,
-	}
+	var view = NewViewport(rows, cols)
 
 	renderer := &TuiRenderer{
 		view: view,

@@ -6,13 +6,6 @@ import (
 
 const DEAD = 0;
 const ALIVE = 1;
-type Viewport struct {
-	rows int
-	cols int
-	centerRow int
-	centerCol int
-	zoom int
-}
 
 type Cell int
 
