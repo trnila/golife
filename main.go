@@ -12,7 +12,6 @@ import (
 
 const DEAD = 0;
 const ALIVE = 1;
-
 type Viewport struct {
 	rows int
 	cols int
@@ -75,11 +74,11 @@ func (b Board) Init(row, col int, val Cell) {
 	b.data[1][b.getIndex(row, col)] = val
 }
 
-func (b Board) AliveNeighbours(row, col int) int {
+func (b Board) AliveNeighbours(row, col, size int) int {
 	var count = 0;
 
-	for r := -1; r <= 1; r++ {
-		for c := -1; c <= 1; c++ {
+	for r := -size; r <= size; r++ {
+		for c := -size; c <= size; c++ {
 			if b.Get(row + r, col + c) == ALIVE {
 				count++
 			}
@@ -92,24 +91,52 @@ func (b Board) AliveNeighbours(row, col int) int {
 func (b Board) Print(view *Viewport) {
 	var rowFrom = int(math.Max(0, float64(view.centerRow - view.rows / 2)))
 	var colFrom = int(math.Max(0, float64(view.centerCol - view.cols / 2)))
-	var rowTo = int(math.Min(float64(view.centerRow + view.rows / 2), float64(b.rows)))
-	var colTo = int(math.Min(float64(view.centerCol + view.cols / 2), float64(b.cols)))
-	for r := rowFrom; r < rowTo; r++ {
-		for c := colFrom; c < colTo; c++ {
-			if b.Get(r, c) == ALIVE {
-				view.screen.SetContent(c - colFrom, r - rowFrom, rune('*'), []rune(""), tcell.StyleDefault)
+
+	view.screen.Clear()
+	var z = view.zoom
+	for r := 0; r < view.rows; r += 1 {
+		for c := 0; c < view.cols; c += 1 {
+			a := ' ';
+
+			if view.zoom == 1 && b.Get(colFrom + c * z, rowFrom + r * z) == ALIVE {
+				a = '*'
 			} else {
-				view.screen.SetContent(c - colFrom, r - rowFrom, rune(' '), []rune(""), tcell.StyleDefault)
+				count := b.AliveNeighbours(colFrom+c*z, rowFrom+r*z, view.zoom-1)
+				if count > view.zoom*view.zoom/2 || (view.zoom == 1 && count == 1) {
+					a = '*'
+				}
 			}
+
+			view.screen.SetContent(
+				c,
+				r,
+				rune(a),
+				[]rune(""),
+				tcell.StyleDefault,
+			)
 		}
 	}
 	view.screen.Show()
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func calc(b *Board, start, to int) {
 	for r := start; r < to; r++ {
 		for c := 0; c < b.cols; c++ {
-			var aliveNeighbours = b.AliveNeighbours(r, c)
+			var aliveNeighbours = b.AliveNeighbours(r, c, 1)
 			var state = b.Get(r, c)
 			if state == ALIVE {
 				if aliveNeighbours < 2 || aliveNeighbours > 3 {
@@ -167,6 +194,7 @@ func main() {
 		cols: cols,
 		centerRow: rows / 2,
 		centerCol: cols / 2,
+		zoom: 1,
 	}
 	view.screen = s
 
@@ -195,6 +223,12 @@ func main() {
 					view.centerRow -= 1
 				} else if ev.Key() == tcell.KeyDown {
 					view.centerRow += 1
+				} else if ev.Key() == tcell.KeyRune {
+					if ev.Rune() == '-' {
+						view.zoom += 1
+					} else if ev.Rune() == '+' {
+						view.zoom = max(view.zoom - 1, 1);
+					}
 				}
 			}
 		}
