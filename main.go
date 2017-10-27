@@ -8,6 +8,7 @@ import (
 	"github.com/gdamore/tcell"
 	"os"
 	"math/rand"
+	"time"
 )
 
 const DEAD = 0;
@@ -88,7 +89,14 @@ func (b Board) AliveNeighbours(row, col, size int) int {
 	return count - int(b.Get(row, col))
 }
 
-func (b Board) Print(view *Viewport) {
+func print(s tcell.Screen, row, col int, str string) {
+	for _, c := range(str) {
+		s.SetContent(col, row, rune(c), []rune(""), tcell.StyleDefault)
+		col += 1
+	}
+}
+
+func (b Board) Print(view *Viewport, elapsed time.Duration) {
 	var rowFrom = int(math.Max(0, float64(view.centerRow - view.rows / 2)))
 	var colFrom = int(math.Max(0, float64(view.centerCol - view.cols / 2)))
 
@@ -116,6 +124,10 @@ func (b Board) Print(view *Viewport) {
 			)
 		}
 	}
+
+	print(view.screen, 0, 0, fmt.Sprintf("%dx%d, %d", b.rows, b.cols, b.generation))
+	print(view.screen, 1, 0, fmt.Sprintf("[%d, %d], %dx", view.centerRow, view.centerCol, view.zoom))
+	print(view.screen, 2, 0, fmt.Sprintf("%s", elapsed))
 	view.screen.Show()
 }
 
@@ -244,7 +256,7 @@ func main() {
 
 func compute(threads int, size int, b *Board, view *Viewport) {
 	for {
-		//start := time.Now()
+		start := time.Now()
 
 		var wait sync.WaitGroup
 		wait.Add(threads)
@@ -266,9 +278,6 @@ func compute(threads int, size int, b *Board, view *Viewport) {
 		wait.Wait()
 
 		b.generation++
-		b.Print(view)
-
-		//elapsed := time.Since(start)
-		//fmt.Println(elapsed)
+		b.Print(view, time.Since(start))
 	}
 }
