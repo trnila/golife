@@ -228,13 +228,13 @@ func main() {
 					close(quit)
 					return
 				} else if ev.Key() == tcell.KeyRight {
-					view.centerCol += 1
+					view.centerCol = min(view.centerCol + 1, b.cols - view.cols / 2)
 				} else if ev.Key() == tcell.KeyLeft {
-					view.centerCol -= 1
+					view.centerCol = max(view.centerCol - 1, view.cols / 2)
 				} else if ev.Key() == tcell.KeyUp {
-					view.centerRow -= 1
+					view.centerRow = max(view.centerRow - 1, view.rows / 2)
 				} else if ev.Key() == tcell.KeyDown {
-					view.centerRow += 1
+					view.centerRow = min(view.centerRow + 1, b.rows - view.rows / 2)
 				} else if ev.Key() == tcell.KeyRune {
 					if ev.Rune() == '-' {
 						view.zoom += 1
