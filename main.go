@@ -1,223 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"sync"
 	"time"
-	"math"
-	"github.com/gdamore/tcell"
 	"os"
-//	"math/rand"
-	"bufio"
-	"strconv"
-	"strings"
 )
 
-const DEAD = 0;
-const ALIVE = 1;
-type Viewport struct {
-	rows int
-	cols int
-	centerRow int
-	centerCol int
-	zoom int
-	screen tcell.Screen
-}
-
-type Cell int
-
-type Board struct {
-	rows int
-	cols int
-	data [][]Cell
-	generation int
-}
-
-func NewBoard(size int) *Board {
-	const generations = 2
-
-	var board = Board{
-		rows: size,
-		cols: size,
-		data: make([][]Cell, generations),
-	}
-
-	for i := 0; i < generations; i++ {
-		board.data[i] = make([]Cell, size * size);
-	}
-
-	return &board
-}
-
-func (b Board) isValid(row, col int) bool {
-	return row >= 0 && col >= 0 &&
-		row < b.rows && col < b.cols;
-}
-
-func (b Board) getIndex(row, col int) int {
-	return row * b.cols + col
-}
-
-func (b Board) Get(row, col int) Cell {
-	if !b.isValid(row, col) {
-		return DEAD
-	}
-
-	return b.data[b.generation % 2][b.getIndex(row, col)];
-}
-
-func (b Board) Set(row, col int, val Cell) {
-	//if b.isValid(row, col) {
-	if(b.getIndex(row, col) < 0 || b.getIndex(row, col) >= b.rows*b.cols) {
-		panic(fmt.Sprintf("err access: %d %d %d", row, col));
-	}
-
-		b.data[(b.generation + 1) % 2][b.getIndex(row, col)] = val
-	//}
-}
-
-func (b Board) Init(row, col int, val Cell) {
-	b.data[0][b.getIndex(row, col)] = val
-	b.data[1][b.getIndex(row, col)] = val
-}
-
-func (b Board) AliveNeighbours(row, col, size int) int {
-	var count = 0;
-
-	for r := -size; r <= size; r++ {
-		for c := -size; c <= size; c++ {
-			if b.Get(row + r, col + c) == ALIVE {
-				count++
-			}
-		}
-	}
-
-	return count - int(b.Get(row, col))
-}
-
-func print(s tcell.Screen, row, col int, str string) {
-	for _, c := range(str) {
-		s.SetContent(col, row, rune(c), []rune(""), tcell.StyleDefault)
-		col += 1
-	}
-}
-
-func (b Board) Print(view *Viewport, elapsed time.Duration) {
-	var rowFrom = int(math.Max(0, float64(view.centerRow - view.rows / 2)))
-	var colFrom = int(math.Max(0, float64(view.centerCol - view.cols / 2)))
-
-	view.screen.Clear()
-	var z = view.zoom
-	for r := 0; r < view.rows; r += 1 {
-		for c := 0; c < view.cols; c += 1 {
-			a := ' ';
-
-			if view.zoom == 1 && b.Get(colFrom + c * z, rowFrom + r * z) == ALIVE {
-				a = '*'
-			} else {
-				count := b.AliveNeighbours(colFrom+c*z, rowFrom+r*z, view.zoom-1)
-				if count > view.zoom*view.zoom/2 || (view.zoom == 1 && count == 1) {
-					a = '*'
-				}
-			}
-
-			view.screen.SetContent(
-				c,
-				r,
-				rune(a),
-				[]rune(""),
-				tcell.StyleDefault,
-			)
-		}
-	}
-
-	print(view.screen, view.rows - 3, 0, fmt.Sprintf("%dx%d, %d", b.rows, b.cols, b.generation))
-	print(view.screen, view.rows - 2, 0, fmt.Sprintf("[%d, %d], %dx", view.centerRow, view.centerCol, view.zoom))
-	print(view.screen, view.rows - 1, 0, fmt.Sprintf("%s", elapsed))
-	view.screen.Show()
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func calc(b *Board, start, to int) {
-	for r := start; r < to; r++ {
-		for c := 0; c < b.cols; c++ {
-			var aliveNeighbours = b.AliveNeighbours(r, c, 1)
-			var state = b.Get(r, c)
-			if state == ALIVE {
-				if aliveNeighbours < 2 || aliveNeighbours > 3 {
-					state = DEAD
-				} else {
-					state = ALIVE
-				}
-			} else if aliveNeighbours == 3 {
-				state = ALIVE
-			}
-
-			b.Set(r, c, state)
-		}
-	}
-}
-
-func load(filename string) *Board {
-	f, err := os.Open(filename); if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	reader := bufio.NewReader(f)
-
-	var board *Board
-	row := 0
-	first := true
-	for {
-		line, err := reader.ReadString('\n'); if err != nil {
-			break
-		}
-
-		if first {
-			first = false
-			size, err := strconv.ParseInt(strings.Trim(line, " \n\r"), 10, 32); if err != nil {
-				panic(err)
-			}
-
-			board = NewBoard(int(size))
-		} else {
-			for col, c := range(strings.Trim(line, "\n\r")) {
-				if col >= board.rows {
-					panic(fmt.Sprintf("Invalid column %d", c))
-				}
-
-				if row >= board.rows {
-					panic(fmt.Sprintf("Invalid column %d", row))
-				}
-
-				if c != '.' {
-					board.Init(col, row, ALIVE)
-				}
-			}
-		}
-
-		row += 1
-	}
-
-	return board
-}
-
-func main() {
-	const threads = 4;
+func createBoard() *Board {
 	var b *Board
 
 	if len(os.Args) == 1 {
@@ -244,72 +33,27 @@ func main() {
 		b = load(os.Args[1])
 	}
 
-	s, e := tcell.NewScreen()
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", e)
-		os.Exit(1)
-	}
-	if e = s.Init(); e != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", e)
-		os.Exit(1)
-	}
+	return b
+}
 
+func main() {
+	const threads = 4;
 
-	cols, rows := s.Size()
-	var view = Viewport{
-		rows: rows,
-		cols: cols,
-		centerRow: rows / 2,
-		centerCol: cols / 2,
-		zoom: 1,
-	}
-	view.screen = s
-
-//	for i := 0; i < 1000000; i++ {
-//		b.Init(rand.Intn(b.rows), rand.Intn(b.cols), Cell(rand.Intn(2)))
-//	}
-
-
+	b := createBoard()
 	quit := make(chan struct{})
 
+	renderer, err := NewTuiRenderer(b, quit); if err != nil {
+		panic(err)
+	}
+	defer renderer.Close()
 
-
-	go func() {
-		for {
-			ev := s.PollEvent()
-			switch ev := ev.(type) {
-			case *tcell.EventKey:
-				if ev.Key() == tcell.KeyCtrlC {
-					close(quit)
-					return
-				} else if ev.Key() == tcell.KeyRight {
-					view.centerCol = min(view.centerCol + 1, b.cols - view.cols / 2)
-				} else if ev.Key() == tcell.KeyLeft {
-					view.centerCol = max(view.centerCol - 1, view.cols / 2)
-				} else if ev.Key() == tcell.KeyUp {
-					view.centerRow = max(view.centerRow - 1, view.rows / 2)
-				} else if ev.Key() == tcell.KeyDown {
-					view.centerRow = min(view.centerRow + 1, b.rows - view.rows / 2)
-				} else if ev.Key() == tcell.KeyRune {
-					if ev.Rune() == '-' {
-						view.zoom += 1
-					} else if ev.Rune() == '+' {
-						view.zoom = max(view.zoom - 1, 1);
-					}
-				}
-			}
-		}
-	}()
-
-
-	go compute(threads, b.rows, b, &view)
+	go compute(threads, b, renderer)
 
 	<- quit
-	s.Fini()
 }
 
 
-func compute(threads int, size int, b *Board, view *Viewport) {
+func compute(threads int, b *Board, renderer Renderer) {
 	const delay = 100 * time.Millisecond
 
 	for {
@@ -322,10 +66,10 @@ func compute(threads int, size int, b *Board, view *Viewport) {
 			go func(t int) {
 				defer wait.Done()
 
-				var from = (size + threads) / threads * t;
-				var to = from + (size+threads)/threads
-				if to > size {
-					to = size
+				var from = (b.rows + threads) / threads * t;
+				var to = from + (b.rows + threads) / threads
+				if to > b.rows {
+					to = b.rows
 				}
 
 				calc(b, from, to)
@@ -336,7 +80,7 @@ func compute(threads int, size int, b *Board, view *Viewport) {
 
 		b.generation++
 		elapsed := time.Since(start)
-		b.Print(view, elapsed)
+		renderer.Render(b, elapsed)
 
 		time.Sleep(delay - elapsed)
 	}
