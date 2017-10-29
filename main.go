@@ -5,6 +5,8 @@ import (
 	"time"
 	"os"
 	"fmt"
+	"math/rand"
+	"runtime"
 )
 
 func createBoard() *Board {
@@ -30,6 +32,10 @@ func createBoard() *Board {
 		b.Init(20, 170, ALIVE)
 		b.Init(21, 170, ALIVE)
 		b.Init(22, 170, ALIVE)
+
+		for i := 0; i < 1000000; i++ {
+			b.Init(rand.Intn(b.rows), rand.Intn(b.cols), Cell(rand.Intn(2)));
+		}
 	} else {
 		b = load(os.Args[1])
 	}
@@ -55,7 +61,7 @@ func CreateRenderer(b *Board, quit chan struct{}) Renderer {
 }
 
 func main() {
-	const threads = 4;
+	threads := runtime.GOMAXPROCS(0);
 
 	b := createBoard()
 	quit := make(chan struct{})
