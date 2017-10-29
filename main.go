@@ -13,13 +13,19 @@ func createBoard() *Board {
 	var b *Board
 
 	if len(os.Args) == 1 {
-		b = NewBoard(10000)
+		b = NewBoard(1000)
 
 		for i := 0; i < b.rows * b.rows / 2; i++ {
 			b.Init(rand.Intn(b.rows), rand.Intn(b.cols), Cell(rand.Intn(2)));
 		}
 	} else {
-		b = load(os.Args[1])
+		filename := os.Args[1]
+
+		if filename == "-" {
+			b = loadFile(os.Stdin)
+		} else {
+			b = load(os.Args[1])
+		}
 	}
 
 	return b

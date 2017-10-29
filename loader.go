@@ -14,6 +14,10 @@ func load(filename string) *Board {
 	}
 	defer f.Close()
 
+	return loadFile(f)
+}
+
+func loadFile(f *os.File) *Board {
 	reader := bufio.NewReader(f)
 
 	var board *Board
