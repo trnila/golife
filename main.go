@@ -13,27 +13,9 @@ func createBoard() *Board {
 	var b *Board
 
 	if len(os.Args) == 1 {
-		b = NewBoard(1000)
+		b = NewBoard(10000)
 
-		b.generation = 0
-		b.Init(5, 5, ALIVE)
-		b.Init(6, 5, ALIVE)
-		b.Init(7, 5, ALIVE)
-
-		b.Init(1, 2, ALIVE)
-		b.Init(1, 3, ALIVE)
-		b.Init(2, 2, ALIVE)
-		b.Init(2, 3, ALIVE)
-
-		b.Init(20, 5, ALIVE)
-		b.Init(21, 5, ALIVE)
-		b.Init(22, 5, ALIVE)
-
-		b.Init(20, 170, ALIVE)
-		b.Init(21, 170, ALIVE)
-		b.Init(22, 170, ALIVE)
-
-		for i := 0; i < 1000000; i++ {
+		for i := 0; i < b.rows * b.rows / 2; i++ {
 			b.Init(rand.Intn(b.rows), rand.Intn(b.cols), Cell(rand.Intn(2)));
 		}
 	} else {
