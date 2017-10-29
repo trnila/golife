@@ -39,7 +39,7 @@ func NewTuiRenderer(b* Board, quit chan struct{}) (*TuiRenderer, error) {
 }
 
 func handleEvents(renderer *TuiRenderer, b *Board, quit chan struct{}) {
-	view := renderer.view
+	view := &renderer.view
 	for {
 		ev := renderer.screen.PollEvent()
 		switch ev := ev.(type) {
