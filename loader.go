@@ -48,7 +48,7 @@ func loadFile(f *os.File, rows, cols uint) *Board {
 
 			board = NewBoard(int(effRows), int(effCols))
 		} else {
-			for col, c := range(strings.Trim(line, "\n\r")) {
+			for col, c := range strings.Trim(line, "\n\r") {
 				if col >= board.cols {
 					log.Print(fmt.Sprintf("Invalid column %d", c))
 				}
@@ -63,7 +63,7 @@ func loadFile(f *os.File, rows, cols uint) *Board {
 			}
 		}
 
-		row += 1
+		row++
 	}
 
 	return board

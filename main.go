@@ -10,17 +10,17 @@ import (
 	"flag"
 )
 
-const DEFAULT_SIZE = 100
+const defaultSize = 100
 
 func createBoard(rows, cols uint) *Board {
 	var b *Board
 
 	if len(flag.Args()) == 0 {
 		if rows <= 0 {
-			rows = DEFAULT_SIZE
+			rows = defaultSize
 		}
 		if cols <= 0 {
-			cols = DEFAULT_SIZE
+			cols = defaultSize
 		}
 
 		b = NewBoard(int(rows), int(cols))

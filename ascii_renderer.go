@@ -9,14 +9,6 @@ type AsciiRenderer struct {
 	view Viewport
 }
 
-type Viewport struct {
-	rows int
-	cols int
-	centerRow int
-	centerCol int
-	zoom int
-}
-
 func (renderer AsciiRenderer) Render(b *Board, elapsed time.Duration) {
 	for row := 0; row < b.rows; row++ {
 		for col := 0; col < b.cols; col++ {

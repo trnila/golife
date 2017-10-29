@@ -3,20 +3,19 @@ package main
 import (
 	"github.com/gdamore/tcell"
 	"fmt"
-	"math"
 	"time"
 )
 
-const DEAD_CELL = ' '
-const ALIVE_CELL = '■'
+const deadCell = ' '
+const aliveCell = '■'
 
 type TuiRenderer struct {
 	view Viewport
 	screen tcell.Screen
 }
 
-func (r *TuiRenderer) Close() {
-	r.screen.Fini()
+func (renderer *TuiRenderer) Close() {
+	renderer.screen.Fini()
 }
 
 func NewTuiRenderer(b* Board, quit chan struct{}) (*TuiRenderer, error) {
@@ -47,20 +46,30 @@ func handleEvents(renderer *TuiRenderer, b *Board, quit chan struct{}) {
 		ev := renderer.screen.PollEvent()
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyCtrlC {
+			switch ev.Key() {
+			case tcell.KeyCtrlC:
 				close(quit)
 				return
-			} else if ev.Key() == tcell.KeyRight {
+
+			case tcell.KeyRight:
 				view.centerCol = min(view.centerCol + 1, b.cols - view.cols / 2)
-			} else if ev.Key() == tcell.KeyLeft {
+				break;
+
+			case tcell.KeyLeft:
 				view.centerCol = max(view.centerCol - 1, view.cols / 2)
-			} else if ev.Key() == tcell.KeyUp {
+				break;
+
+			case tcell.KeyUp:
 				view.centerRow = max(view.centerRow - 1, view.rows / 2)
-			} else if ev.Key() == tcell.KeyDown {
+				break;
+
+			case tcell.KeyDown:
 				view.centerRow = min(view.centerRow + 1, b.rows - view.rows / 2)
-			} else if ev.Key() == tcell.KeyRune {
+				break;
+
+			case tcell.KeyRune:
 				if ev.Rune() == '-' {
-					view.zoom += 1
+					view.zoom++
 				} else if ev.Rune() == '+' {
 					view.zoom = max(view.zoom - 1, 1);
 				}
@@ -70,37 +79,27 @@ func handleEvents(renderer *TuiRenderer, b *Board, quit chan struct{}) {
 }
 
 func print(s tcell.Screen, row, col int, str string) {
-	for _, c := range(str) {
+	for _, c := range str {
 		s.SetContent(col, row, rune(c), []rune(""), tcell.StyleDefault)
-		col += 1
+		col++
 	}
 }
 
 func (renderer TuiRenderer) Render(b *Board, elapsed time.Duration) {
 	view := renderer.view
 
-	var rowFrom = int(math.Max(0, float64(view.centerRow - view.rows / 2)))
-	var colFrom = int(math.Max(0, float64(view.centerCol - view.cols / 2)))
+	var rowFrom = max(0, view.centerRow - view.rows / 2)
+	var colFrom = max(0, view.centerCol - view.cols / 2)
 
 	renderer.screen.Clear()
-	var z = view.zoom
-	for r := 0; r < view.rows; r += 1 {
-		for c := 0; c < view.cols; c += 1 {
-			a := DEAD_CELL
-
-			if view.zoom == 1 && b.Get(rowFrom + r * z, colFrom + c * z) == ALIVE {
-				a = ALIVE_CELL
-			} else {
-				count := b.AliveNeighbours(rowFrom+r*z, colFrom+c*z, view.zoom-1)
-				if count > view.zoom*view.zoom/2 || (view.zoom == 1 && count == 1) {
-					a = ALIVE_CELL
-				}
-			}
+	for row := 0; row < view.rows; row++ {
+		for col := 0; col < view.cols; col++ {
+			cell := getCellState(view, b, rowFrom + row * view.zoom, colFrom + col * view.zoom)
 
 			renderer.screen.SetContent(
-				c,
-				r,
-				rune(a),
+				col,
+				row,
+				rune(cell),
 				[]rune(""),
 				tcell.StyleDefault,
 			)
@@ -111,4 +110,18 @@ func (renderer TuiRenderer) Render(b *Board, elapsed time.Duration) {
 	print(renderer.screen, view.rows - 2, 0, fmt.Sprintf("[%d, %d], %dx", view.centerRow, view.centerCol, view.zoom))
 	print(renderer.screen, view.rows - 1, 0, fmt.Sprintf("%s", elapsed))
 	renderer.screen.Show()
+}
+
+func getCellState(view Viewport, b *Board, globalRow, globalCol int) int32 {
+	if view.zoom == 1 {
+		if b.Get(globalRow, globalCol) == ALIVE {
+			return aliveCell
+		}
+	} else {
+		count := b.AliveNeighbours(globalRow, globalCol, view.zoom - 1)
+		if count > view.zoom * view.zoom / 2 {
+			return aliveCell
+		}
+	}
+	return deadCell
 }
