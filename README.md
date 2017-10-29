@@ -6,7 +6,7 @@ Current state of world is read from read-only matrix and updated state is writte
 Matrices are swapped before each generation.
 
 ## Install
-Assuming you have correctly set your *$GOPATH* and *$PATH*.
+Assuming you have correctly set your **$GOPATH** and **$PATH**.
 
 ```sh
 go get github.com/trnila/golife
@@ -22,7 +22,10 @@ go build .
 ```
 
 ## Limit of cores
-Number of used cores for parallel computation can be changed with environment variable *GOMAXPROCS*, eg:
+Number of used cores for parallel computation can be changed with environment variable **GOMAXPROCS**, eg:
 ```
 GOMAXPROCS=2 golife
 ```
+
+## TUI Controls
+You can move in world with arrows keys and zoom in (**+**) or zoom out (**-**).
