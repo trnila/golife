@@ -7,24 +7,35 @@ import (
 	"fmt"
 	"math/rand"
 	"runtime"
+	"flag"
 )
 
-func createBoard() *Board {
+const DEFAULT_SIZE = 100
+
+func createBoard(rows, cols uint) *Board {
 	var b *Board
 
-	if len(os.Args) == 1 {
-		b = NewBoard(1000)
+	if len(flag.Args()) == 0 {
+		if rows <= 0 {
+			rows = DEFAULT_SIZE
+		}
+		if cols <= 0 {
+			cols = DEFAULT_SIZE
+		}
 
-		for i := 0; i < b.rows * b.rows / 2; i++ {
+		b = NewBoard(int(rows), int(cols))
+
+		rand.Seed(time.Now().Unix())
+		for i := 0; i < b.rows * b.cols / 2; i++ {
 			b.Init(rand.Intn(b.rows), rand.Intn(b.cols), Cell(rand.Intn(2)));
 		}
 	} else {
-		filename := os.Args[1]
+		filename := flag.Arg(0)
 
 		if filename == "-" {
-			b = loadFile(os.Stdin)
+			b = loadFile(os.Stdin, rows, cols)
 		} else {
-			b = load(os.Args[1])
+			b = load(filename, rows, cols)
 		}
 	}
 
@@ -50,8 +61,12 @@ func CreateRenderer(b *Board, quit chan struct{}) Renderer {
 
 func main() {
 	threads := runtime.GOMAXPROCS(0);
+	rows := flag.Uint("rows", 0, "number of rows in world")
+	cols := flag.Uint("cols", 0, "number of cols in world")
 
-	b := createBoard()
+	flag.Parse()
+
+	b := createBoard(*rows, *cols)
 	quit := make(chan struct{})
 
 	renderer := CreateRenderer(b, quit)

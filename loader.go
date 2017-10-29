@@ -6,18 +6,19 @@ import (
 	"fmt"
 	"strconv"
 	"os"
+	"log"
 )
 
-func load(filename string) *Board {
+func load(filename string, rows, cols uint) *Board {
 	f, err := os.Open(filename); if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	return loadFile(f)
+	return loadFile(f, rows, cols)
 }
 
-func loadFile(f *os.File) *Board {
+func loadFile(f *os.File, rows, cols uint) *Board {
 	reader := bufio.NewReader(f)
 
 	var board *Board
@@ -34,19 +35,30 @@ func loadFile(f *os.File) *Board {
 				panic(err)
 			}
 
-			board = NewBoard(int(size))
+			effRows := uint(size)
+			effCols := uint(size)
+
+			if rows > 0 {
+				effRows = rows
+			}
+
+			if cols > 0 {
+				effCols = cols
+			}
+
+			board = NewBoard(int(effRows), int(effCols))
 		} else {
 			for col, c := range(strings.Trim(line, "\n\r")) {
-				if col >= board.rows {
-					panic(fmt.Sprintf("Invalid column %d", c))
+				if col >= board.cols {
+					log.Print(fmt.Sprintf("Invalid column %d", c))
 				}
 
 				if row >= board.rows {
-					panic(fmt.Sprintf("Invalid column %d", row))
+					log.Print(fmt.Sprintf("Invalid column %d", row))
 				}
 
 				if c != '.' {
-					board.Init(col, row, ALIVE)
+					board.Init(row, col, ALIVE)	
 				}
 			}
 		}

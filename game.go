@@ -13,17 +13,17 @@ type Board struct {
 	generation int
 }
 
-func NewBoard(size int) *Board {
+func NewBoard(rows, cols int) *Board {
 	const generations = 2
 
 	var board = Board{
-		rows: size,
-		cols: size,
+		rows: rows,
+		cols: cols,
 		data: make([][]Cell, generations),
 	}
 
 	for i := 0; i < generations; i++ {
-		board.data[i] = make([]Cell, (size + BITS) / BITS * size);
+		board.data[i] = make([]Cell, (cols + BITS) / BITS * rows);
 	}
 
 	return &board
@@ -35,7 +35,7 @@ func (b Board) isValid(row, col int) bool {
 }
 
 func (b Board) getIndex(row, col int) int {
-	return row * b.cols / BITS + col / BITS
+	return row * ((b.cols + BITS) / BITS) + col / BITS
 }
 
 func (b Board) Get(row, col int) Cell {
@@ -58,8 +58,10 @@ func (b Board) Set(row, col int, val Cell) {
 }
 
 func (b Board) Init(row, col int, val Cell) {
-	b.data[0][b.getIndex(row, col)] |= val << (uint(col) % BITS)
-	b.data[1][b.getIndex(row, col)] |= val << (uint(col) % BITS)
+	if b.isValid(row, col) {
+		b.data[0][b.getIndex(row, col)] |= val << (uint(col) % BITS)
+		b.data[1][b.getIndex(row, col)] |= val << (uint(col) % BITS)
+	}
 }
 
 func (b Board) AliveNeighbours(row, col, size int) int {

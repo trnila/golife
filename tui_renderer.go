@@ -88,10 +88,10 @@ func (renderer TuiRenderer) Render(b *Board, elapsed time.Duration) {
 		for c := 0; c < view.cols; c += 1 {
 			a := DEAD_CELL
 
-			if view.zoom == 1 && b.Get(colFrom + c * z, rowFrom + r * z) == ALIVE {
+			if view.zoom == 1 && b.Get(rowFrom + r * z, colFrom + c * z) == ALIVE {
 				a = ALIVE_CELL
 			} else {
-				count := b.AliveNeighbours(colFrom+c*z, rowFrom+r*z, view.zoom-1)
+				count := b.AliveNeighbours(rowFrom+r*z, colFrom+c*z, view.zoom-1)
 				if count > view.zoom*view.zoom/2 || (view.zoom == 1 && count == 1) {
 					a = ALIVE_CELL
 				}
