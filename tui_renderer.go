@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+const DEAD_CELL = ' '
+const ALIVE_CELL = '■'
+
 type TuiRenderer struct {
 	view Viewport
 	screen tcell.Screen
@@ -83,14 +86,14 @@ func (renderer TuiRenderer) Render(b *Board, elapsed time.Duration) {
 	var z = view.zoom
 	for r := 0; r < view.rows; r += 1 {
 		for c := 0; c < view.cols; c += 1 {
-			a := ' ';
+			a := DEAD_CELL
 
 			if view.zoom == 1 && b.Get(colFrom + c * z, rowFrom + r * z) == ALIVE {
-				a = '*'
+				a = ALIVE_CELL
 			} else {
 				count := b.AliveNeighbours(colFrom+c*z, rowFrom+r*z, view.zoom-1)
 				if count > view.zoom*view.zoom/2 || (view.zoom == 1 && count == 1) {
-					a = '*'
+					a = ALIVE_CELL
 				}
 			}
 
