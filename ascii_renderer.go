@@ -5,9 +5,7 @@ import (
 	"fmt"
 )
 
-type AsciiRenderer struct {
-	view Viewport
-}
+type AsciiRenderer struct {}
 
 func (renderer AsciiRenderer) Render(b *Board, elapsed time.Duration) {
 	for row := 0; row < b.rows; row++ {
@@ -27,8 +25,6 @@ func (renderer AsciiRenderer) Close() {
 }
 
 func NewAsciiRenderer(b* Board, quit chan struct{}) (AsciiRenderer, error) {
-	return AsciiRenderer{
-		view: NewViewport(10, 10),
-	}, nil
+	return AsciiRenderer{}, nil
 }
 
