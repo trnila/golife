@@ -1,7 +1,7 @@
 package main
 
-const DEAD = 0;
-const ALIVE = 1;
+const DEAD = 0
+const ALIVE = 1
 
 type Cell int64
 const BITS = 64
@@ -23,7 +23,7 @@ func NewBoard(rows, cols int) *Board {
 	}
 
 	for i := 0; i < generations; i++ {
-		board.data[i] = make([]Cell, (cols + BITS) / BITS * rows);
+		board.data[i] = make([]Cell, (cols + BITS) / BITS * rows)
 	}
 
 	return &board
@@ -31,7 +31,7 @@ func NewBoard(rows, cols int) *Board {
 
 func (b Board) isValid(row, col int) bool {
 	return row >= 0 && col >= 0 &&
-		row < b.rows && col < b.cols;
+		row < b.rows && col < b.cols
 }
 
 func (b Board) getIndex(row, col int) int {
@@ -43,17 +43,15 @@ func (b Board) Get(row, col int) Cell {
 		return DEAD
 	}
 
-	val := b.data[b.generation % 2][b.getIndex(row, col)] >> (uint(col) % BITS);
-
-	val &= 0x1;
-	return Cell(val)
+	val := b.data[b.generation % 2][b.getIndex(row, col)] >> (uint(col) % BITS)
+	return Cell(val & 0x1)
 }
 
 func (b Board) Set(row, col int, val Cell) {
 	if val == ALIVE {
-		b.data[(b.generation+1)%2][b.getIndex(row, col)] |= 1 << (uint(col) % BITS)
+		b.data[(b.generation + 1) % 2][b.getIndex(row, col)] |= 1 << (uint(col) % BITS)
 	} else {
-		b.data[(b.generation+1)%2][b.getIndex(row, col)] &^= (1 << (uint(col) % BITS))
+		b.data[(b.generation + 1 ) % 2][b.getIndex(row, col)] &^= 1 << (uint(col) % BITS)
 	}
 }
 
@@ -65,7 +63,7 @@ func (b Board) Init(row, col int, val Cell) {
 }
 
 func (b Board) AliveNeighbours(row, col, size int) int {
-	var count = 0;
+	var count = 0
 
 	for r := -size; r <= size; r++ {
 		for c := -size; c <= size; c++ {

@@ -27,7 +27,7 @@ func createBoard(rows, cols uint) *Board {
 
 		rand.Seed(time.Now().Unix())
 		for i := 0; i < b.rows * b.cols / 2; i++ {
-			b.Init(rand.Intn(b.rows), rand.Intn(b.cols), Cell(rand.Intn(2)));
+			b.Init(rand.Intn(b.rows), rand.Intn(b.cols), Cell(rand.Intn(2)))
 		}
 	} else {
 		filename := flag.Arg(0)
@@ -45,7 +45,7 @@ func createBoard(rows, cols uint) *Board {
 func CreateRenderer(b *Board, quit chan struct{}) Renderer {
 	var renderer Renderer
 
-	renderer, err := NewTuiRenderer(b, quit);
+	renderer, err := NewTuiRenderer(b, quit)
 	if err == nil {
 		return renderer
 	}
@@ -60,7 +60,7 @@ func CreateRenderer(b *Board, quit chan struct{}) Renderer {
 }
 
 func main() {
-	threads := runtime.GOMAXPROCS(0);
+	threads := runtime.GOMAXPROCS(0)
 	rows := flag.Uint("rows", 0, "number of rows in world")
 	cols := flag.Uint("cols", 0, "number of cols in world")
 
@@ -91,7 +91,7 @@ func compute(threads int, b *Board, renderer Renderer) {
 			go func(t int) {
 				defer wait.Done()
 
-				var from = (b.rows + threads) / threads * t;
+				var from = (b.rows + threads) / threads * t
 				var to = from + (b.rows + threads) / threads
 				if to > b.rows {
 					to = b.rows

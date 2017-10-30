@@ -1,7 +1,7 @@
 # golife
 Simple parallel approach for Game Of Life in Golang.
 
-Each generation splits world to parts that are handled by lightweight goroutines concurently.
+Each generation splits world to parts that are handled by lightweight goroutines concurrently.
 Current state of world is read from read-only matrix and updated state is written to write-only matrix.
 Matrices are swapped before each generation.
 

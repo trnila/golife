@@ -53,32 +53,32 @@ func handleEvents(renderer *TuiRenderer, b *Board, quit chan struct{}) {
 
 			case tcell.KeyRight:
 				view.centerCol = min(view.centerCol + 1, b.cols - view.cols / 2)
-				break;
+				break
 
 			case tcell.KeyLeft:
 				view.centerCol = max(view.centerCol - 1, view.cols / 2)
-				break;
+				break
 
 			case tcell.KeyUp:
 				view.centerRow = max(view.centerRow - 1, view.rows / 2)
-				break;
+				break
 
 			case tcell.KeyDown:
 				view.centerRow = min(view.centerRow + 1, b.rows - view.rows / 2)
-				break;
+				break
 
 			case tcell.KeyRune:
 				if ev.Rune() == '-' {
 					view.zoom++
 				} else if ev.Rune() == '+' {
-					view.zoom = max(view.zoom - 1, 1);
+					view.zoom = max(view.zoom - 1, 1)
 				}
 			}
 		}
 	}
 }
 
-func print(s tcell.Screen, row, col int, str string) {
+func puts(s tcell.Screen, row, col int, str string) {
 	for _, c := range str {
 		s.SetContent(col, row, rune(c), []rune(""), tcell.StyleDefault)
 		col++
@@ -106,9 +106,9 @@ func (renderer TuiRenderer) Render(b *Board, elapsed time.Duration) {
 		}
 	}
 
-	print(renderer.screen, view.rows - 3, 0, fmt.Sprintf("%dx%d, %d", b.rows, b.cols, b.generation))
-	print(renderer.screen, view.rows - 2, 0, fmt.Sprintf("[%d, %d], %dx", view.centerRow, view.centerCol, view.zoom))
-	print(renderer.screen, view.rows - 1, 0, fmt.Sprintf("%s", elapsed))
+	puts(renderer.screen, view.rows - 3, 0, fmt.Sprintf("%dx%d, %d", b.rows, b.cols, b.generation))
+	puts(renderer.screen, view.rows - 2, 0, fmt.Sprintf("[%d, %d], %dx", view.centerRow, view.centerCol, view.zoom))
+	puts(renderer.screen, view.rows - 1, 0, fmt.Sprintf("%s", elapsed))
 	renderer.screen.Show()
 }
 
