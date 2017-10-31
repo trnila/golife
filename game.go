@@ -76,7 +76,8 @@ func (b Board) AliveNeighbours(row, col, size int) int {
 	return count - int(b.Get(row, col))
 }
 
-func calc(b *Board, start, to int) {
+func calc(b *Board, start, to int, totals chan int) {
+	totalAlive := 0
 	for r := start; r < to; r++ {
 		for c := 0; c < b.cols; c++ {
 			var aliveNeighbours = b.AliveNeighbours(r, c, 1)
@@ -91,7 +92,12 @@ func calc(b *Board, start, to int) {
 				state = ALIVE
 			}
 
+			if state == ALIVE {
+				totalAlive++
+			}
 			b.Set(r, c, state)
 		}
 	}
+
+	totals <- totalAlive
 }

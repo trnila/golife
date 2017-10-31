@@ -1,7 +1,6 @@
 package main
 
 import (
-	"sync"
 	"time"
 	"os"
 	"fmt"
@@ -81,31 +80,33 @@ func main() {
 func compute(threads int, b *Board, renderer Renderer) {
 	const delay = 100 * time.Millisecond
 
+	alivesChan := make(chan int)
 	for {
 		start := time.Now()
 
-		var wait sync.WaitGroup
-		wait.Add(threads)
-
 		for t := 0; t < threads; t++ {
 			go func(t int) {
-				defer wait.Done()
-
 				var from = (b.rows + threads) / threads * t
 				var to = from + (b.rows + threads) / threads
 				if to > b.rows {
 					to = b.rows
 				}
 
-				calc(b, from, to)
+				calc(b, from, to, alivesChan)
 			}(t)
 		}
 
-		wait.Wait()
+		totalAlives := 0
+		for t := 0; t < threads; t++ {
+			totalAlives += <- alivesChan
+		}
 
 		b.generation++
 		elapsed := time.Since(start)
-		renderer.Render(b, elapsed)
+		renderer.Render(b, RenderInfo{
+			elapsed: elapsed,
+			alive: totalAlives,
+		})
 
 		time.Sleep(delay - elapsed)
 	}

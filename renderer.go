@@ -2,8 +2,13 @@ package main
 
 import "time"
 
+type RenderInfo struct {
+	elapsed time.Duration
+	alive int
+}
+
 type Renderer interface {
-	Render(b *Board, elapsed time.Duration)
+	Render(b *Board, info RenderInfo)
 	Close()
 }
 

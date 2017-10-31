@@ -1,13 +1,12 @@
 package main
 
 import (
-	"time"
 	"fmt"
 )
 
 type AsciiRenderer struct {}
 
-func (renderer AsciiRenderer) Render(b *Board, elapsed time.Duration) {
+func (renderer AsciiRenderer) Render(b *Board, info RenderInfo) {
 	for row := 0; row < b.rows; row++ {
 		for col := 0; col < b.cols; col++ {
 			c := " "

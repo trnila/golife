@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/gdamore/tcell"
 	"fmt"
-	"time"
 )
 
 const deadCell = ' '
@@ -85,7 +84,7 @@ func puts(s tcell.Screen, row, col int, str string) {
 	}
 }
 
-func (renderer TuiRenderer) Render(b *Board, elapsed time.Duration) {
+func (renderer TuiRenderer) Render(b *Board, info RenderInfo) {
 	view := renderer.view
 
 	var rowFrom = max(0, view.centerRow - view.rows / 2)
@@ -106,9 +105,10 @@ func (renderer TuiRenderer) Render(b *Board, elapsed time.Duration) {
 		}
 	}
 
+	puts(renderer.screen, view.rows - 4, 0, fmt.Sprintf("%d alive", info.alive))
 	puts(renderer.screen, view.rows - 3, 0, fmt.Sprintf("%dx%d, %d", b.rows, b.cols, b.generation))
 	puts(renderer.screen, view.rows - 2, 0, fmt.Sprintf("[%d, %d], %dx", view.centerRow, view.centerCol, view.zoom))
-	puts(renderer.screen, view.rows - 1, 0, fmt.Sprintf("%s", elapsed))
+	puts(renderer.screen, view.rows - 1, 0, fmt.Sprintf("%s", info.elapsed))
 	renderer.screen.Show()
 }
 
