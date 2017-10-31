@@ -41,17 +41,17 @@ func createBoard(rows, cols uint) *Board {
 	return b
 }
 
-func CreateRenderer(b *Board, quit chan struct{}) Renderer {
+func CreateRenderer(b *Board) Renderer {
 	var renderer Renderer
 
-	renderer, err := NewTuiRenderer(b, quit)
+	renderer, err := NewTuiRenderer(b)
 	if err == nil {
 		return renderer
 	}
 	fmt.Print(err)
 
 	// fallback to ascii renderer
-	renderer, err = NewAsciiRenderer(b, quit); if err != nil {
+	renderer, err = NewAsciiRenderer(b); if err != nil {
 		panic(err)
 	}
 
@@ -66,18 +66,18 @@ func main() {
 	flag.Parse()
 
 	b := createBoard(*rows, *cols)
-	quit := make(chan struct{})
+	nextRender := make(chan RenderInfo)
 
-	renderer := CreateRenderer(b, quit)
+	renderer := CreateRenderer(b)
 	defer renderer.Close()
 
-	go compute(threads, b, renderer)
+	go compute(threads, b, nextRender)
 
-	<- quit
+	renderer.Start(nextRender)
 }
 
 
-func compute(threads int, b *Board, renderer Renderer) {
+func compute(threads int, b *Board, nextRender chan RenderInfo) {
 	const delay = 100 * time.Millisecond
 
 	alivesChan := make(chan int)
@@ -103,10 +103,10 @@ func compute(threads int, b *Board, renderer Renderer) {
 
 		b.generation++
 		elapsed := time.Since(start)
-		renderer.Render(b, RenderInfo{
+		nextRender <- RenderInfo{
 			elapsed: elapsed,
 			alive: totalAlives,
-		})
+		}
 
 		time.Sleep(delay - elapsed)
 	}

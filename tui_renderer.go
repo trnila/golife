@@ -8,16 +8,28 @@ import (
 const deadCell = ' '
 const aliveCell = '■'
 
+const (
+	cmdRight = 1
+	cmdLeft = 2
+	cmdUp = 3
+	cmdDown = 4
+	cmdZoomIn = 5
+	cmdZoomOut = 6
+	cmdQuit = 7
+)
+
 type TuiRenderer struct {
+	board *Board
 	view Viewport
 	screen tcell.Screen
+	cmd chan int
 }
 
 func (renderer *TuiRenderer) Close() {
 	renderer.screen.Fini()
 }
 
-func NewTuiRenderer(b* Board, quit chan struct{}) (*TuiRenderer, error) {
+func NewTuiRenderer(b* Board) (*TuiRenderer, error) {
 	s, e := tcell.NewScreen()
 	if e != nil {
 		return nil, e
@@ -30,48 +42,81 @@ func NewTuiRenderer(b* Board, quit chan struct{}) (*TuiRenderer, error) {
 	var view = NewViewport(rows, cols)
 
 	renderer := &TuiRenderer{
+		board: b,
 		view: view,
 		screen: s,
+		cmd: make(chan int),
 	}
 
-	go handleEvents(renderer, b, quit)
+	go handleEvents(renderer, b)
 
 	return renderer, nil
 }
 
-func handleEvents(renderer *TuiRenderer, b *Board, quit chan struct{}) {
-	view := &renderer.view
+func (renderer *TuiRenderer) Start(renderFrame chan RenderInfo) {
+	var state RenderInfo
+	for {
+		select {
+			case state = <- renderFrame:
+			case cmd := <- renderer.cmd:
+				view := &renderer.view
+				switch cmd {
+				case cmdRight:
+					view.centerCol = min(view.centerCol + 1, renderer.board.cols - view.cols / 2)
+					break
+
+				case cmdLeft:
+					view.centerCol = max(view.centerCol - 1, view.cols / 2)
+					break
+
+				case cmdUp:
+					view.centerRow = max(view.centerRow - 1, view.rows / 2)
+					break
+
+				case cmdDown:
+					view.centerRow = min(view.centerRow + 1, renderer.board.rows - view.rows / 2)
+					break
+
+				case cmdZoomIn:
+					view.zoom = max(view.zoom - 1, 1)
+					break
+
+				case cmdZoomOut:
+					view.zoom++
+					break
+
+				case cmdQuit:
+					return
+				}
+		}
+
+		renderer.Render(renderer.board, state)
+	}
+}
+
+func key(k tcell.Key, c byte) int {
+	return (int(k) << 16) | int(c)
+}
+
+func handleEvents(renderer *TuiRenderer, b *Board) {
+	keys := map[int]int {
+		key(tcell.KeyCtrlC, 3): cmdQuit,
+		key(tcell.KeyRight, 0): cmdRight,
+		key(tcell.KeyLeft, 0): cmdLeft,
+		key(tcell.KeyUp, 0): cmdUp,
+		key(tcell.KeyDown, 0): cmdDown,
+		key(tcell.KeyRune, '+'): cmdZoomIn,
+		key(tcell.KeyRune, '-'): cmdZoomOut,
+	}
+
 	for {
 		ev := renderer.screen.PollEvent()
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
-			switch ev.Key() {
-			case tcell.KeyCtrlC:
-				close(quit)
-				return
-
-			case tcell.KeyRight:
-				view.centerCol = min(view.centerCol + 1, b.cols - view.cols / 2)
-				break
-
-			case tcell.KeyLeft:
-				view.centerCol = max(view.centerCol - 1, view.cols / 2)
-				break
-
-			case tcell.KeyUp:
-				view.centerRow = max(view.centerRow - 1, view.rows / 2)
-				break
-
-			case tcell.KeyDown:
-				view.centerRow = min(view.centerRow + 1, b.rows - view.rows / 2)
-				break
-
-			case tcell.KeyRune:
-				if ev.Rune() == '-' {
-					view.zoom++
-				} else if ev.Rune() == '+' {
-					view.zoom = max(view.zoom - 1, 1)
-				}
+			k := key(ev.Key(), byte(ev.Rune()))
+			action, ok := keys[k]
+			if ok {
+				renderer.cmd <- action
 			}
 		}
 	}
@@ -84,7 +129,7 @@ func puts(s tcell.Screen, row, col int, str string) {
 	}
 }
 
-func (renderer TuiRenderer) Render(b *Board, info RenderInfo) {
+func (renderer* TuiRenderer) Render(b *Board, info RenderInfo) {
 	view := renderer.view
 
 	var rowFrom = max(0, view.centerRow - view.rows / 2)

@@ -8,7 +8,7 @@ type RenderInfo struct {
 }
 
 type Renderer interface {
-	Render(b *Board, info RenderInfo)
+	Start(renderFrame chan RenderInfo)
 	Close()
 }
 

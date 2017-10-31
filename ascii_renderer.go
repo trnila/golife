@@ -4,9 +4,14 @@ import (
 	"fmt"
 )
 
-type AsciiRenderer struct {}
+type AsciiRenderer struct {
+	board *Board
+	renderFrame chan RenderInfo
+}
 
-func (renderer AsciiRenderer) Render(b *Board, info RenderInfo) {
+func (renderer AsciiRenderer) Start(renderFrame chan RenderInfo) {
+	b := renderer.board
+
 	for row := 0; row < b.rows; row++ {
 		for col := 0; col < b.cols; col++ {
 			c := " "
@@ -23,7 +28,9 @@ func (renderer AsciiRenderer) Close() {
 
 }
 
-func NewAsciiRenderer(b* Board, quit chan struct{}) (AsciiRenderer, error) {
-	return AsciiRenderer{}, nil
+func NewAsciiRenderer(b* Board) (AsciiRenderer, error) {
+	return AsciiRenderer{
+		board:b,
+	}, nil
 }
 
